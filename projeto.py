@@ -60,8 +60,7 @@ def monta_grade(historico_disciplinas, periodo,disciplina_falta_fazer=[] ):
         caminhos = encontra_todos_caminhos(grafo, disciplina,'fim')
         # para cada materia retornada pela BFS da disciplina do grafo será analisada se o aluno pode/precisa ou não fazer
         for caminho in caminhos:
-            posicao = caminho.index(disciplina)
-            for x in range(posicao+1, len(caminho)-1):
+            for x in range(1, len(caminho)-1):
                 if caminho[x] not in disciplinas_impossivel_fazer:
                     disciplinas_impossivel_fazer.append(caminho[x])
             if disciplina not in disciplinas_impossivel_fazer:
@@ -79,7 +78,6 @@ def monta_grade(historico_disciplinas, periodo,disciplina_falta_fazer=[] ):
             break
         caminhos = encontra_todos_caminhos(grafo, disciplina, 'fim')
         for caminho in caminhos:
-            posicao = caminho.index(disciplina)
             if caminho[1] !='fim':
                 if periodo+1 in disciplinas_semestres:
                     if caminho[1] in disciplinas_semestres[periodo+1]:
