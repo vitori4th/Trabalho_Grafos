@@ -8,6 +8,15 @@ disciplinas_semestres = {1: ['XDES01', 'SAHC04', 'SAHC05', 'MAT00A', 'IEPG01', '
                              # 8:['XAHC01','XAHC03','TCC1','ADM03E'],
                              # 9:['TCC2','SADG01']
                              }
+optativasi=['A']
+optativasp=['B']
+
+#verifica se o fecho transitivo indireto da disciplina optativa já esta na lista de disciplias feitas
+def verificaop(op,grafo, diciplinas):
+    for x in grafo:
+        if op in grafo[x] and x not in diciplinas:
+            return op
+    return 0
 
 def bfs(grafo, v):
     lista=[]
@@ -23,19 +32,16 @@ def bfs(grafo, v):
     return lista
 
 def monta_grade(historico_disciplinas, periodo, numero, disciplina_falta_fazer=[]):
-    # dicionario com periodo(chave) e disciplinas (valor)
-    if historico_disciplinas==[]:
-        #se aluno acabou de começar retorna o padrão
-        return print(disciplinas_semestres)
-
     disciplinas_pode_fazer = []  # disciplinas que o aluno pode fazer esse semestre
     disciplinas_impossivel_fazer = []  # disciplinas que ele não pode fazer (por conta de préq requisitos ou questão de oferta
     disciplinas_mais_importantes = []  # disciplinas mais importantes (críticas) serem feitas no semestre que ele está
 
     # verifica se o periodo é par ou impar, para definir quais disciplinas ele pode ou não pegar
     periodo_impar = True
+    optativas=optativasp
     if numero % 2 == 0:
         periodo_impar = False
+        optativas =optativasi
 
     # quantidade de disciplinas que ele irá pegar
     if len(disciplinas_semestres[periodo]) < 4:
@@ -44,9 +50,9 @@ def monta_grade(historico_disciplinas, periodo, numero, disciplina_falta_fazer=[
         quantidade_disciplinas_periodo = len(disciplinas_semestres[periodo])
 
     # Grafo com as relações de pré requisito das disciplinas
-    grafo = {'XDES01': ['XDES02'], 'SAHC04': ['XDES02'], 'SAHC05': ['XDES03','SDES05'], 'MAT00A': ['XDES02'],'IEPG01': ['fim'],'IEPG22': ['fim'],
-            'XDES02': ['fim'],'XDES04': ['fim'],'STC001': ['fim'],'XMAC01': ['fim'],'IEPG04': ['fim'],'ECN01': ['fim'], 'STC002': ['fim'], 'SRSC03': ['fim'], 'SDES05': ['fim'], 'XDES03': ['fim'],
-             'SRSC02': ['fim'], 'XPAD01': ['fim'], 'SMAC03': ['fim'], 'XMAC02': ['fim'], 'IEPG14': ['fim'],'fim':[]
+    grafo = {'XDES01': ['XDES02'], 'SAHC04': ['XDES02'], 'SAHC05': ['XDES04','SDES05'], 'MAT00A': [],'IEPG01': [],'IEPG22': [],
+            'XDES02': [],'XDES04': [],'STC001': [],'XMAC01': [],'IEPG04': [],'ECN01': [], 'STC002': ['B'], 'SRSC03': [], 'SDES05': [], 'XDES03': [],
+             'SRSC02': [], 'XPAD01': [], 'SMAC03': [], 'XMAC02': [], 'IEPG14': [],'B':[]
              }
 
     # verifica quais disciplinas dos semestres anteriores ele deixou de fazer e quais as disciplinas do semestre q ele está
@@ -71,7 +77,6 @@ def monta_grade(historico_disciplinas, periodo, numero, disciplina_falta_fazer=[
         if disciplina not in disciplinas_impossivel_fazer:
             if disciplina not in disciplinas_pode_fazer:
                 disciplinas_pode_fazer.append(disciplina)
-
     # remove as disciplinas que ele não consegue fazer por conta dos pré requisitos
     for x in disciplinas_impossivel_fazer:
         if x in disciplinas_pode_fazer:
@@ -93,31 +98,40 @@ def monta_grade(historico_disciplinas, periodo, numero, disciplina_falta_fazer=[
             break
         result = bfs(grafo,disciplina)
         for materia in result:
-            if materia != 'fim':
-                if periodo + 1 in disciplinas_semestres:
-                    if materia in disciplinas_semestres[periodo + 1]:
-                        # adiciona na lista de disciplinas críticas
-                        if disciplina not in disciplinas_mais_importantes:
-                            disciplinas_mais_importantes.append(disciplina)
-                if periodo + 2 in disciplinas_semestres:
-                    if materia in disciplinas_semestres[periodo + 2]:
-                        # adiciona na lista de disciplinas críticas
-                        if disciplina not in disciplinas_mais_importantes:
-                            disciplinas_mais_importantes.append(disciplina)
+            if periodo + 1 in disciplinas_semestres:
+                if materia in disciplinas_semestres[periodo + 1]:
+                    # adiciona na lista de disciplinas críticas
+                    if disciplina not in disciplinas_mais_importantes:
+                        disciplinas_mais_importantes.append(disciplina)
+            if periodo + 2 in disciplinas_semestres:
+                if materia in disciplinas_semestres[periodo + 2]:
+                    # adiciona na lista de disciplinas críticas
+                    if disciplina not in disciplinas_mais_importantes:
+                        disciplinas_mais_importantes.append(disciplina)
 
-    # completa a lista de disciplinas criticas com o restante das disciplinas
+    # completa a lista de disciplinas críticas com o restante das disciplinas
     for disciplina in disciplinas_pode_fazer:
         if len(disciplinas_mais_importantes) == quantidade_disciplinas_periodo:
             break
         if disciplina not in disciplinas_mais_importantes:
             disciplinas_mais_importantes.append(disciplina)
 
-    # o histórico do aluno é atualizado com as disciplinas que ele fez no semestre
-    historico_disciplinas = historico_disciplinas + disciplinas_mais_importantes
-
     # as disciplinas feitas são removidas da lista das que faltam fazer
     for disciplina in disciplinas_mais_importantes:
         disciplina_falta_fazer.remove(disciplina)
+    while len(disciplinas_mais_importantes)<quantidade_disciplinas_periodo:
+        add_optativa=input('Deseja adicionar uma optativa? (S-sim N-não) \n')
+        if add_optativa != 'S':
+            break
+        result = input('Digite qual disciplina deseja fazer: ')
+        op=verificaop(result,grafo, historico_disciplinas)
+        if op==0:
+            disciplinas_mais_importantes.append(result)
+            print('Adicionada')
+        else:
+            print('Não adicionada, possui pré-requisito')
+    # o histórico do aluno é atualizado com as disciplinas que ele fez no semestre
+    historico_disciplinas = historico_disciplinas + disciplinas_mais_importantes
 
     print('semestre:', numero, disciplinas_mais_importantes)
 
@@ -130,5 +144,5 @@ def monta_grade(historico_disciplinas, periodo, numero, disciplina_falta_fazer=[
 
 
 # disicplinas que o aluno ja fez
-grafo = ['IEPG01']
+grafo = ['ECN01']
 monta_grade(grafo, 1, 1)
